@@ -1,0 +1,52 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    tools:context=".MainActivity">
+
+    <include layout="@layout/content_head"
+        android:id="@+id/content_head_id"
+        android:layout_height="wrap_content"
+        android:layout_width="match_parent" />
+
+
+    <include layout="@layout/content_bottom"
+        android:id="@+id/content_bottom_id"
+        android:layout_height="wrap_content"
+        android:layout_width="match_parent"
+        android:layout_alignParentBottom="true"/>
+
+
+    <com.amap.api.maps.MapView
+        android:layout_below="@id/content_head_id"
+        android:layout_above="@id/content_bottom_id"
+        android:id="@+id/map"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent">
+
+    </com.amap.api.maps.MapView>
+
+    <LinearLayout
+        android:id="@+id/hind_layout"
+        android:visibility="invisible"
+        android:background="@color/black"
+        android:alpha="0.4"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:layout_below="@id/content_head_id"
+        android:layout_above="@id/content_bottom_id"
+        android:orientation="vertical">
+
+        <android.support.v7.widget.RecyclerView
+            android:id="@+id/hind_recycler_view"
+            android:background="@color/white"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content">
+
+        </android.support.v7.widget.RecyclerView>
+    </LinearLayout>
+
+
+</RelativeLayout>

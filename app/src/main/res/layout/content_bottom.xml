@@ -1,0 +1,38 @@
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:id="@+id/bottomSheetLayout"
+    android:layout_width="match_parent"
+    android:layout_height="130dp"
+    android:orientation="vertical">
+
+    <TextView
+        android:layout_marginLeft="40dp"
+        android:layout_marginTop="20dp"
+        android:id="@+id/bottom_one"
+        android:layout_width="match_parent"
+        android:layout_height="30dp"
+        android:text="路标地名"
+        android:textSize="20dp"
+        android:textColor="@color/black"/>
+
+    <TextView
+        android:layout_marginLeft="40dp"
+        android:gravity="center_vertical"
+        android:id="@+id/bottom_two"
+        android:layout_width="match_parent"
+        android:layout_height="30dp"
+        android:text="约70米，达到需要1分钟"
+        android:textSize="16dp" />
+
+    <TextView
+        android:layout_marginLeft="40dp"
+        android:gravity="center_vertical"
+
+        android:id="@+id/bottom_three"
+        android:layout_width="match_parent"
+        android:layout_height="30dp"
+        android:text="查看详情"
+        android:textSize="16dp"
+        android:textColor="@color/blue"/>
+
+</LinearLayout>
