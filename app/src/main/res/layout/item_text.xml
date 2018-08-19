@@ -10,7 +10,7 @@
         android:layout_height="match_parent"
         android:text="8号教学楼"
         android:textSize="20dp"
-        android:textColor="@color/head_gray"
+        android:textColor="@color/black"
         android:gravity="center_vertical"
         android:paddingLeft="30dp"/>
 

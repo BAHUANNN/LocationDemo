@@ -8,15 +8,21 @@ import android.view.ViewGroup;
 import android.widget.Button;
 import android.widget.TextView;
 
+
+import com.amap.api.services.core.LatLonPoint;
+import com.amap.api.services.core.PoiItem;
+
 import java.util.ArrayList;
 
 class HindAdapter extends RecyclerView.Adapter {
     private static final int TEXT_VIEW = 0;
     private static final int BOTTOM_VIEW = 1;
-    private ArrayList<String> list;
+    private ArrayList<PoiItem> list;
+    private ChangeText changeText;
 
-    public HindAdapter(ArrayList<String> list){
+    public HindAdapter(ArrayList<PoiItem> list,ChangeText changeText){
         this.list = list;
+        this.changeText = changeText;
     }
 
     @Override
@@ -41,7 +47,7 @@ class HindAdapter extends RecyclerView.Adapter {
         if(position == list.size()){
             ((BottomHolder)holder).bind();
         }else {
-            ((TextHolder) holder).bind("8号教学楼");
+            ((TextHolder) holder).bind(list.get(position).getAdName(),list.get(position).getLatLonPoint());
         }
     }
 
@@ -57,8 +63,14 @@ class HindAdapter extends RecyclerView.Adapter {
             textView = itemView.findViewById(R.id.item_text);
         }
 
-        public void bind(String s){
+        public void bind(final String s, final LatLonPoint l){
             textView.setText(s);
+            textView.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View view) {
+                    changeText.changeEditText(s,l);
+                }
+            });
         }
     }
 
@@ -73,7 +85,7 @@ class HindAdapter extends RecyclerView.Adapter {
             textView.setOnClickListener(new View.OnClickListener() {
                 @Override
                 public void onClick(View view) {
-
+                    //跳转操作
                 }
             });
         }

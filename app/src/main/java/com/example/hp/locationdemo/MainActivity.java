@@ -1,6 +1,6 @@
 package com.example.hp.locationdemo;
 
-import android.media.Image;
+import android.content.Context;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.support.v7.widget.LinearLayoutManager;
@@ -8,20 +8,24 @@ import android.support.v7.widget.RecyclerView;
 import android.text.Editable;
 import android.text.TextWatcher;
 import android.view.View;
-import android.view.WindowManager;
+import android.view.inputmethod.InputMethodManager;
 import android.widget.EditText;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
-import android.widget.RelativeLayout;
 import android.widget.TextView;
-import android.widget.Toast;
 
 import com.amap.api.maps.AMap;
 import com.amap.api.maps.CameraUpdateFactory;
 import com.amap.api.maps.MapView;
+import com.amap.api.maps.model.BitmapDescriptorFactory;
+import com.amap.api.maps.model.LatLng;
 import com.amap.api.maps.model.Marker;
+import com.amap.api.maps.model.MarkerOptions;
 import com.amap.api.maps.model.MyLocationStyle;
 import com.amap.api.services.core.LatLonPoint;
+import com.amap.api.services.core.PoiItem;
+import com.amap.api.services.poisearch.PoiResult;
+import com.amap.api.services.poisearch.PoiSearch;
 import com.amap.api.services.route.BusRouteResult;
 import com.amap.api.services.route.DriveRouteResult;
 import com.amap.api.services.route.RideRouteResult;
@@ -29,31 +33,44 @@ import com.amap.api.services.route.RouteSearch;
 import com.amap.api.services.route.WalkPath;
 import com.amap.api.services.route.WalkRouteResult;
 import com.example.hp.locationdemo.overlay.WalkRouteOverlay;
+import com.example.hp.locationdemo.util.AMapServicesUtil;
 
 import java.util.ArrayList;
+import java.util.List;
 
-public class MainActivity extends AppCompatActivity implements TextWatcher, AMap.OnMarkerClickListener {
+public class MainActivity extends AppCompatActivity implements PoiSearch.OnPoiSearchListener,TextWatcher, AMap.OnMarkerClickListener ,View.OnFocusChangeListener{
     private TextView bottomOne;
     private TextView bottomTwo;
     private TextView bottomThree;
+
     private EditText fromText;
     private EditText toText;
     private ImageView exchangeImage;
+    private EditText searchText;
+    private ImageView searchImage;
+    private LinearLayout searchLayout;
+    private LinearLayout routeLayout;
+    private ImageView backImage;
 
     private LinearLayout hindLayout;
     private RecyclerView hindRecyclerView;
+    private TextView exchangeText;
 
     private MapView mMapView = null;
     private AMap aMap;
     private RouteSearch routeSearch;
 
-    private LatLonPoint mStartPoint = new LatLonPoint(39.996678,116.479271);//起点，39.996678,116.479271
-    private LatLonPoint mEndPoint = new LatLonPoint(39.997796,116.468939);//终点，39.997796,116.468939
+    private LatLonPoint mStartPoint;//起点，39.996678,116.479271
+    private LatLonPoint mEndPoint;//终点，39.997796,116.468939
+    private LatLonPoint mSearchPoint;
     private WalkRouteOverlay walkRouteOverlay;
 
-    private ArrayList<String> list = new ArrayList<>();
+    private ArrayList<PoiItem> list = new ArrayList<>();
     private HindAdapter hindAdapter;
 
+    private static final int SEARCH_MODE = 0;
+    private static final int ROUTE_MODE = 1;
+    private int mode = SEARCH_MODE;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -68,11 +85,48 @@ public class MainActivity extends AppCompatActivity implements TextWatcher, AMap
             aMap = mMapView.getMap();
             aMap.setOnMarkerClickListener(this);
         }
-
         initView();
+        initListener();
         initLocation();
     }
 
+    private void initListener() {
+        exchangeText.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                exchangeRouteMode();
+            }
+        });
+        bottomThree.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                DetailActivity.start(getApplicationContext(),"from_main_activity");
+            }
+        });
+        backImage.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                comeback();
+            }
+        });
+        searchImage.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                searchPlace();
+            }
+        });
+        exchangeImage.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                searchRoute();
+            }
+        });
+    }
+
+
+    private void searchPlace() {
+
+    }
 
     private void searchRoute() {
         if(routeSearch == null){
@@ -132,25 +186,58 @@ public class MainActivity extends AppCompatActivity implements TextWatcher, AMap
         toText = findViewById(R.id.to_text);
         fromText.addTextChangedListener(this);
         toText.addTextChangedListener(this);
+        fromText.setOnFocusChangeListener(this);
+        toText.setOnFocusChangeListener(this);
+
+        searchText = findViewById(R.id.search_text);
+        searchText.setOnFocusChangeListener(this);
+        searchText.addTextChangedListener(this);
+        searchImage = findViewById(R.id.search_image);
+        searchLayout = findViewById(R.id.search_layout);
+        routeLayout = findViewById(R.id.route_layout);
+
+        backImage = findViewById(R.id.back_image);
+        exchangeText = findViewById(R.id.exchange_text);
 
         bottomOne = findViewById(R.id.bottom_one);
         bottomTwo = findViewById(R.id.bottom_two);
         bottomThree = findViewById(R.id.bottom_three);
         exchangeImage = findViewById(R.id.exchange_image);
-        exchangeImage.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                searchRoute();
-            }
-        });
 
         hindLayout = findViewById(R.id.hind_layout);
         hindRecyclerView = findViewById(R.id.hind_recycler_view);
         initRecyclerView();
     }
 
+    private void comeback() {
+        if(mode == ROUTE_MODE){
+            mode = SEARCH_MODE;
+            searchLayout.setVisibility(View.VISIBLE);
+            routeLayout.setVisibility(View.GONE);
+            exchangeText.setVisibility(View.VISIBLE);
+        }else if(mode == SEARCH_MODE){
+            finish();
+        }
+    }
+
+    private void exchangeRouteMode() {
+        mode = ROUTE_MODE;
+        routeLayout.setVisibility(View.VISIBLE);
+        exchangeText.setVisibility(View.GONE);
+        searchLayout.setVisibility(View.GONE);
+    }
+
     private void initRecyclerView() {
-        hindAdapter = new HindAdapter(list);
+        ChangeText changeText = new ChangeText() {
+            @Override
+            public void changeEditText(String s,LatLonPoint l) {
+                if(fromText.hasFocus()){fromText.setText(s);mStartPoint=l;fromText.clearFocus();}
+                else if(toText.hasFocus()) {toText.setText(s);mEndPoint=l;toText.clearFocus();}
+                else {searchText.setText(s);mSearchPoint=l;searchText.clearFocus();}
+                hideKeyboard();
+            }
+        };
+        hindAdapter = new HindAdapter(list,changeText);
         hindRecyclerView.setAdapter(hindAdapter);
         hindRecyclerView.setLayoutManager(new LinearLayoutManager(this));
     }
@@ -189,12 +276,11 @@ public class MainActivity extends AppCompatActivity implements TextWatcher, AMap
     @Override
     public void onTextChanged(CharSequence charSequence, int i, int i1, int i2) {
         if(charSequence.length()==0)hindLayout.setVisibility(View.INVISIBLE);
-        else if(hindLayout.getVisibility() != View.VISIBLE)hindLayout.setVisibility(View.VISIBLE);
-        list.clear();
-        for (int j = 0; j < charSequence.length(); j++) {
-            list.add("8号教学");
+        else if (hindLayout.getVisibility() != View.VISIBLE){
+            hindLayout.setVisibility(View.VISIBLE);
         }
-        hindAdapter.notifyDataSetChanged();
+        searchHelp(charSequence.toString());
+
     }
 
     @Override
@@ -208,5 +294,42 @@ public class MainActivity extends AppCompatActivity implements TextWatcher, AMap
         double longitude = marker.getPosition().longitude;
         //然后请求数据`````````
         return false;
+    }
+
+    @Override
+    public void onFocusChange(View view, boolean hasFocus) {
+        if(hasFocus){
+
+
+        }else {
+            hindLayout.setVisibility(View.INVISIBLE);
+        }
+    }
+
+    public void searchHelp(String locate){
+        PoiSearch.Query query=new PoiSearch.Query(locate,"","武汉");
+        PoiSearch poiSearch=new PoiSearch(this,query);
+        poiSearch.setOnPoiSearchListener(this);
+        poiSearch.searchPOIAsyn();
+    }
+
+    @Override
+    public void onPoiSearched(PoiResult poiResult, int i) {
+        list.clear();
+        list.addAll(poiResult.getPois());
+        hindAdapter.notifyDataSetChanged();
+    }
+
+    @Override
+    public void onPoiItemSearched(PoiItem poiItem, int i) {
+
+    }
+
+    private void hideKeyboard() {
+        View viewFocus = this.getCurrentFocus();
+        if (viewFocus != null) {
+            InputMethodManager imManager = (InputMethodManager)getSystemService(Context.INPUT_METHOD_SERVICE);
+            imManager.hideSoftInputFromWindow(viewFocus.getWindowToken(), 0);
+        }
     }
 }
